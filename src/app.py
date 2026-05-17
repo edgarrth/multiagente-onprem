@@ -1,6 +1,8 @@
 import re
 import uuid
 from pathlib import Path
+import base64
+import sqlite3
 
 import streamlit as st
 
@@ -186,10 +188,16 @@ with reporteria_tab:
         if reporte_match:
             reporte_path = Path(reporte_match.group(1).strip())
             if reporte_path.exists():
+                reporte_html = reporte_path.read_text(encoding="utf-8")
+                reporte_b64 = base64.b64encode(reporte_html.encode("utf-8")).decode("ascii")
                 with st.expander("Vista previa del reporte"):
-                    st.components.v1.html(
-                        reporte_path.read_text(encoding="utf-8"), height=600
-                    )
+                    st.iframe(f"data:text/html;base64,{reporte_b64}", height=600)
+                st.download_button(
+                    "Descargar reporte",
+                    data=reporte_html,
+                    file_name=reporte_path.name,
+                    mime="text/html",
+                )
 
 with herramientas_tab:
     st.subheader("Utilitarios")
@@ -201,6 +209,19 @@ with herramientas_tab:
             with st.spinner("Creando base de datos..."):
                 crearBaseDeDatosDePrueba(CONF_BASE_DE_DATOS_RUTA)
             st.success("Base de datos creada.")
+
+            #Validamos inserciones
+            try:
+                conexion = sqlite3.connect(CONF_BASE_DE_DATOS_RUTA)
+                cursor = conexion.cursor()
+                conteos = {}
+                for tabla in ["cliente", "empresa", "transaccion"]:
+                    cursor.execute(f"SELECT COUNT(*) FROM {tabla}")
+                    conteos[tabla] = cursor.fetchone()[0]
+                conexion.close()
+                st.json(conteos)
+            except Exception as exc:
+                st.warning(f"No se pudo validar inserciones: {exc}")
 
         if st.button("Ver esquema de la base de datos"):
             esquema = obtenerEsquemaDeMetadatos(CONF_BASE_DE_DATOS_RUTA)
@@ -241,4 +262,3 @@ with herramientas_tab:
             ]
         )
     )
-

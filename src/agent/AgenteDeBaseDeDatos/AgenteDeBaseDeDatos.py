@@ -71,21 +71,26 @@ class AgenteDeBaseDeDatos:
         )
       elif "no such column" in error_texto:
         columna = None
-        match = re.search(r"no such column:\s*(\w+)", error_texto)
+        match = re.search(r"no such column:\s*([\w\.]+)", error_texto)
         if match:
           columna = match.group(1)
 
         instrucciones = "Usa solo columnas que existan en el esquema."
         if columna:
+          columna_simple = columna
+          if "." in columna:
+            alias, columna_simple = columna.split(".", 1)
+            instrucciones += f" No uses el alias '{alias}', usa nombres reales de tablas del esquema."
+
           tabla_columna = None
           for tabla, columnas in self.esquema.items():
-            if any(col["nombreDeColumna"] == columna for col in columnas):
+            if any(col["nombreDeColumna"] == columna_simple for col in columnas):
               tabla_columna = tabla
               break
           if tabla_columna:
-            instrucciones += f" La columna '{columna}' existe en la tabla '{tabla_columna}', usa '{tabla_columna}.{columna}'."
+            instrucciones += f" La columna '{columna_simple}' existe en la tabla '{tabla_columna}', usa '{tabla_columna}.{columna_simple}'."
           else:
-            instrucciones += f" La columna '{columna}' no existe, reemplazala por una columna valida del esquema."
+            instrucciones += f" La columna '{columna_simple}' no existe, reemplazala por una columna valida del esquema."
 
         sql = self.utilesAgenteDeBaseDeDatos.generaCodigoSQLDesdeNLP(
           pregunta = prompt,

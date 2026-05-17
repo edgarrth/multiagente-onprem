@@ -12,6 +12,8 @@ from langchain_core.prompts import PromptTemplate
 
 #Utilitario para convertir la estructura string a json
 import json
+#Utilitario para rutas
+from pathlib import Path
 
 class AgenteDeVisualizacion:
 
@@ -59,10 +61,11 @@ class AgenteDeVisualizacion:
     nombreReporte = datetime.now().strftime("%Y%m%d%H%M%S%f")
 
     #Creamos el directorio
-    os.makedirs(self.rutaDeReporte, exist_ok=True)
+    ruta_reporte = Path(self.rutaDeReporte)
+    ruta_reporte.mkdir(parents=True, exist_ok=True)
 
     #Ruta completa del reporte:
-    rutaCompletaDelReporte = self.rutaDeReporte / f"REPORTE_{nombreReporte}.html"
+    rutaCompletaDelReporte = ruta_reporte / f"REPORTE_{nombreReporte}.html"
 
     #Guardamos el reporte
     with open(rutaCompletaDelReporte, "w", encoding="utf-8") as archivo:
