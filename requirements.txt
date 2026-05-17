@@ -1,0 +1,30 @@
+#Librería para implementar la arquitectura RAG
+langchain
+
+#Librería con utilitarios comunes para proyectos de I.A. Generativa
+langchain-community
+
+#Librería con más utilitarios de langchain
+langchain-core
+
+#Librería plugin para que Langchain pueda usar Ollama
+langchain-ollama
+
+#Libreria para crear interfaces graficas
+streamlit
+gradio
+
+#Herramienta para bases de conocimiento
+chromadb
+
+#Plugin de Langchain para ChromaDB
+langchain-chroma
+
+#Herramienta para leer textos desde PDFs
+pypdf
+
+#Herramienta para cortar textos y crear chunks
+langchain-text-splitters
+
+#Instalamos LangGraph, la librería para implementar agentes
+langgraph
