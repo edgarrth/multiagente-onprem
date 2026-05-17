@@ -13,6 +13,8 @@ from langchain_core.prompts import PromptTemplate
 
 #Utilitario para convertir la estructura string a json
 import json
+#Utilitario para expresiones regulares
+import re
 
 #Utilitarios del motor de base de datos
 from agent.AgenteDeBaseDeDatos.UtilesBaseDeDatosSQLite import *
@@ -53,10 +55,47 @@ class AgenteDeBaseDeDatos:
     )
 
     #Ejecutamos la consulta SQL
-    resultados = self.utilesBaseDeDatos.ejecutarConsulta(
-        sql = sql
-    )
+    try:
+      resultados = self.utilesBaseDeDatos.ejecutarConsulta(
+          sql = sql
+      )
+    except Exception as e:
+      error_texto = str(e)
+      if "ambiguous column name" in error_texto:
+        sql = self.utilesAgenteDeBaseDeDatos.generaCodigoSQLDesdeNLP(
+          pregunta = prompt,
+          instruccionesExtra = "Usa siempre columnas calificadas con el nombre de la tabla o alias, por ejemplo tabla.columna."
+        )
+        resultados = self.utilesBaseDeDatos.ejecutarConsulta(
+          sql = sql
+        )
+      elif "no such column" in error_texto:
+        columna = None
+        match = re.search(r"no such column:\s*(\w+)", error_texto)
+        if match:
+          columna = match.group(1)
 
+        instrucciones = "Usa solo columnas que existan en el esquema."
+        if columna:
+          tabla_columna = None
+          for tabla, columnas in self.esquema.items():
+            if any(col["nombreDeColumna"] == columna for col in columnas):
+              tabla_columna = tabla
+              break
+          if tabla_columna:
+            instrucciones += f" La columna '{columna}' existe en la tabla '{tabla_columna}', usa '{tabla_columna}.{columna}'."
+          else:
+            instrucciones += f" La columna '{columna}' no existe, reemplazala por una columna valida del esquema."
+
+        sql = self.utilesAgenteDeBaseDeDatos.generaCodigoSQLDesdeNLP(
+          pregunta = prompt,
+          instruccionesExtra = instrucciones
+        )
+        resultados = self.utilesBaseDeDatos.ejecutarConsulta(
+          sql = sql
+        )
+      else:
+        raise
     #Analizamos los resultados
     analisis = self.utilesAgenteDeBaseDeDatos.analizarDatos(
         datos = resultados,

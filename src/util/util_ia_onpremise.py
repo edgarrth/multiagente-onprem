@@ -358,7 +358,8 @@ def actualizarBaseDeConocimientoDeUsuario(
   os.makedirs(CONF_BASE_DE_CONOCIMIENTO_USUARIOS, exist_ok = True)
 
   #Almacenamos el contenido en un archivo
-  with open(CONF_BASE_DE_CONOCIMIENTO_USUARIOS+"/"+baseDeConocimientoDeUsuario+".txt", "w", encoding="utf-8") as archivo:
+  ruta_archivo = Path(CONF_BASE_DE_CONOCIMIENTO_USUARIOS) / f"{baseDeConocimientoDeUsuario}.txt"
+  with open(ruta_archivo, "w", encoding="utf-8") as archivo:
     archivo.write(contenido)
 
 #Utilitario para leer desde base de conocimiento de usuario

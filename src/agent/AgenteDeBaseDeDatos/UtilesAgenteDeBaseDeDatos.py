@@ -31,7 +31,8 @@ class UtilesAgenteDeBaseDeDatos:
   #Función para generar el código SQL desde NLP
   def generaCodigoSQLDesdeNLP(
     self,
-    pregunta = None
+    pregunta = None,
+    instruccionesExtra = None
   ):
     sql = None
 
@@ -49,6 +50,8 @@ class UtilesAgenteDeBaseDeDatos:
       Solicitud del usuario:
       {pregunta}
 
+      {instruccionesExtra}
+
       Respuesta: SOLO la consulta SQL, sin explicaciones.
     """)
 
@@ -56,7 +59,8 @@ class UtilesAgenteDeBaseDeDatos:
     prompt = promptTemplate.format(
       dialectoDeBaseDeDatos = self.dialectoDeBaseDeDatos,
       esquema = self.esquema,
-      pregunta = pregunta
+      pregunta = pregunta,
+      instruccionesExtra = instruccionesExtra or ""
     )
 
     #Invocamos el modelo

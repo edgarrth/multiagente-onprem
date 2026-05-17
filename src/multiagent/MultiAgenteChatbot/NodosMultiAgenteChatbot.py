@@ -11,8 +11,10 @@ from util.util_ia_onpremise import *
 #Utilitario para crear una plantilla de prompt
 from langchain_core.prompts import PromptTemplate
 
-#Utilitario para convertir la estructura string a json
+#Utilitario para convertir la estructura string to json
 import json
+#Utilitario para expresiones regulares
+import re
 
 #Utilitario para crear grafos
 from langgraph.graph import StateGraph
@@ -99,6 +101,30 @@ class NodosMultiAgenteChatbot:
           "estado": "NO_SE_DETECTO_INFORMACION_POR_RECORDAR",
           "message": respuesta.get("message", "Respuesta invalida del modelo")
         }
+
+      #Heuristica simple para capturar datos basicos si el modelo no detecta memoria
+      if respuesta.get("estado") == "NO_SE_DETECTO_INFORMACION_POR_RECORDAR":
+        sentencias = []
+
+        nombre_match = re.search(r"(?i)\b(?:me llamo|mi nombre es|soy)\s+([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+){0,2})", prompt)
+        if nombre_match:
+          sentencias.append(f"El usuario afirma que su nombre es {nombre_match.group(1)}")
+
+        edad_match = re.search(r"(?i)\b(?:tengo|teng|mi edad es|edad)\s+(\d{1,3})\s*(?:años|anos)?\b", prompt)
+        if not edad_match:
+          edad_match = re.search(r"(?i)\b(\d{1,3})\s*(?:años|anos)\b", prompt)
+        if edad_match:
+          sentencias.append(f"El usuario afirma que su edad es {edad_match.group(1)}")
+
+        sexo_match = re.search(r"(?i)\b(?:soy\s+)?(hombre|masculino|femenino)\b", prompt)
+        if sexo_match:
+          sentencias.append(f"El usuario afirma que su sexo es {sexo_match.group(1)}")
+
+        if sentencias:
+          respuesta = {
+            "estado": "INFORMACION_POR_RECORDAR",
+            "informacion": "\n".join(sentencias)
+          }
 
       #Construimos la salida
       output["node_a3_agenteDeMemoriaLargoPlazo"] = respuesta
